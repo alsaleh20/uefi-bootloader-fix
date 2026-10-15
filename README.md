@@ -1,206 +1,187 @@
-# Windows UEFI Bootloader Manual Repair Guide
-
-A comprehensive, step-by-step guide to manually fixing and rebuilding corrupted Windows UEFI EFI bootloaders (BCD) using Command Prompt and Diskpart.
-
----
-
-## Overview
-
-This guide provides a reliable method to repair a damaged Windows UEFI Boot Configuration Data (BCD) file or EFI system partition. This issue typically occurs after system updates, partition resizing, dual-boot configurations, or unexpected shut downs that force Windows into an **Automatic Repair** loop.
+# Windows EFI Bootloader Manual Repair Guide using Diskpart
+> دليل الإصلاح اليدوي لإقلاع ويندوز باستخدام Diskpart
 
 ---
 
-## Prerequisites
+## English Version
 
-1. Access to the Windows Recovery Environment (WinRE) via **Automatic Repair** screen or a bootable Windows Installation USB.
-2. Navigate to: **Troubleshoot** > **Advanced Options** > **Command Prompt**.
+A comprehensive step-by-step guide detailing the necessary commands and actions to rebuild and repair Windows (Windows 10/11) boot files (BCD) in a UEFI environment when the system crashes or boots directly into the Automatic Repair screen.
 
 ---
 
-## Step-by-Step Instructions
+### Prerequisites
 
-### Step 1: Open Diskpart and Identify the Target Disk
+1. Access the Automatic Repair screen.
+2. Navigate to the Command Prompt following this path:
+   - Troubleshoot
+   - Advanced Options
+   - Command Prompt
 
-1. Launch the Diskpart utility:
-   ```cmd
-      diskpart
-         ```
+---
 
-         2. List all available physical drives:
-            ```cmd
-               list disk
-                  ```
+### Manual Repair Steps
 
-                  3. Select the primary disk where Windows is installed (usually Disk 0):
-                     ```cmd
-                        select disk 0
-                           ```
+#### Step 1: Launch Diskpart and Select the Main Disk
 
-                           4. List all partitions on the selected disk:
-                              ```cmd
-                                 list partition
-                                    ```
+Open the disk management tool and display the list to identify the OS drive:
 
-                                    ---
+```cmd
+diskpart
+list disk
+select disk 0
+list partition
+```
 
-                                    ### Step 2: Locate the EFI Partition and Assign a Drive Letter
+Note: Make sure to select the correct disk number (usually Disk 0).
 
-                                    1. Identify the hidden EFI System Partition. It is formatted as **FAT32** and typically ranges between **100MB and 500MB** in size.
+---
 
-                                    2. Select the EFI partition:
-                                       ```cmd
-                                          select partition X
-                                             ```
-                                                *(Replace `X` with the actual partition number of your FAT32 system partition)*
+#### Step 2: Identify the EFI Partition and Assign a Drive Letter
 
-                                                3. Assign an unused drive letter to the partition (e.g., `V:`):
-                                                   ```cmd
-                                                      assign letter=V:
-                                                         ```
+Look through the partitions list for the hidden boot partition, identified by:
+- File System: FAT32
+- Size: Between 100MB and 500MB
 
-                                                         4. Exit the Diskpart utility:
-                                                            ```cmd
-                                                               exit
-                                                                  ```
+Execute the following commands to assign a temporary drive letter (e.g., V:):
 
-                                                                  ---
+```cmd
+select partition X
+assign letter=V:
+exit
+```
 
-                                                                  ### Step 3: Rebuild the Boot Configuration Data (BCD)
+Warning: Replace X with your actual FAT32 partition number.
 
-                                                                  1. Change directory to the EFI Boot folder:
-                                                                     ```cmd
-                                                                        cd /d V:\EFI\Microsoft\Boot\
-                                                                           ```
+---
 
-                                                                           2. Attempt to repair the boot sector:
-                                                                              ```cmd
-                                                                                 bootrec /fixboot
-                                                                                    ```
+#### Step 3: Rebuild Boot Files (BCD)
 
-                                                                                    3. **If you encounter an "Access is Denied" error:**
-                                                                                       Reformat only the assigned EFI partition (`V:`):
-                                                                                          ```cmd
-                                                                                             format V: /FS:FAT32
-                                                                                                ```
+Navigate to the boot folder and rebuild the boot files:
 
-                                                                                                4. Recreate the boot files by referencing your main Windows directory (usually `C:\Windows`):
-                                                                                                   ```cmd
-                                                                                                      bcdboot C:\Windows /l en-us /s V: /f ALL
-                                                                                                         ```
-                                                                                                            *Expected Output:* `Boot files successfully created.`
+```cmd
+cd /d V:\EFI\Microsoft\Boot\
+bootrec /fixboot
+```
 
-                                                                                                            ---
+##### In case of an "Access is denied" error:
+Format only the designated EFI boot partition (ensure you are acting on the assigned letter V:):
 
-                                                                                                            ### Step 4: Exit and Reboot
+```cmd
+format V: /FS:FAT32
+```
 
-                                                                                                            1. Exit the Command Prompt:
-                                                                                                               ```cmd
-                                                                                                                  exit
-                                                                                                                     ```
+Then rebuild the system files pointing to your main Windows directory:
 
-                                                                                                                     2. Click **Continue to Windows** to reboot your machine into the operating system.
+```cmd
+bcdboot C:\Windows /l en-us /s V: /f ALL
+```
 
-                                                                                                                     ---
-                                                                                                                     ---
+Success Indicator: You should see the message: "Boot files successfully created".
 
-                                                                                                                     # دليل الإصلاح اليدوي لـ Windows UEFI Bootloader
+---
 
-                                                                                                                     دليل عملي وشامل لإصلاح وإعادة بناء ملفات إقلاع نظام ويندوز (BCD) المعتمدة على نظام UEFI يدويًا باستخدام موجه الأوامر وأداة Diskpart.
+#### Step 4: Exit and Reboot
 
-                                                                                                                     ---
+Exit the command prompt and restart your system:
 
-                                                                                                                     ## نظرة عامة
+```cmd
+exit
+```
 
-                                                                                                                     يقدم هذا الدليل طريقة مجربة لإصلاح تعطل ملفات BCD أو بارتيشن EFI الخاص بإقلاع الويندوز. تحدث هذه المشكلة عادةً بسبب التحديثات، تعديل أحجام البارتيشنز، إعدادات الإقلاع المزدوج (Dual-boot)، أو الإغلاق المفاجئ للجهاز الذي يؤدي للدخول المباشر في شاشة **Automatic Repair**.
+Click Continue to Windows to boot directly into your operating system.
 
-                                                                                                                     ---
+---
+---
 
-                                                                                                                     ## المتطلبات الأساسية
+## النسخة العربية
 
-                                                                                                                     1. الدخول إلى بيئة إصلاح الويندوز (WinRE) عبر شاشة **Automatic Repair** أو باستخدام قارورة تثبيت الويندوز (Bootable USB).
-                                                                                                                     2. الانتقال إلى: **Troubleshoot** > **Advanced Options** > **Command Prompt**.
+دليل شامل ومفصل يتضمن الأوامر والخطوات اللازمة لإعادة بناء وإصلاح ملفات الإقلاع (BCD) لنظام ويندوز (Windows 10/11) في بيئة UEFI عند تعطل النظام أو توجهه المباشر إلى شاشة Automatic Repair.
 
-                                                                                                                     ---
+---
 
-                                                                                                                     ## خطوات الإصلاح التفصيلية
+### المتطلبات الأساسية
 
-                                                                                                                     ### الخطوة 1: تشغيل أداة Diskpart وتحديد القرص الرئيسي
+1. الوصول إلى شاشة Automatic Repair (الإصلاح التلقائي).
+2. الانتقال إلى موجه الأوامر بالترتيب التالي:
+   - Troubleshoot (استكشاف الأخطاء وإصلاحها)
+   - Advanced Options (خيارات متقدمة)
+   - Command Prompt (موجه الأوامر)
 
-                                                                                                                     1. قم بتشغيل أداة إدارة الأقراص:
-                                                                                                                        ```cmd
-                                                                                                                           diskpart
-                                                                                                                              ```
+---
 
-                                                                                                                              2. اعرض جميع الأقراص الموصلة بالجهاز:
-                                                                                                                                 ```cmd
-                                                                                                                                    list disk
-                                                                                                                                       ```
+### خطوات الإصلاح اليدوي
 
-                                                                                                                                       3. اختر القرص الرئيسي المثبت عليه نظام ويندوز (عادةً Disk 0):
-                                                                                                                                          ```cmd
-                                                                                                                                             select disk 0
-                                                                                                                                                ```
+#### الخطوة 1: تشغيل أداة Diskpart وتحديد القرص الرئيسي
 
-                                                                                                                                                4. اعرض جميع التقسيمات (Partitions) الموجودة على القرص:
-                                                                                                                                                   ```cmd
-                                                                                                                                                      list partition
-                                                                                                                                                         ```
+افتح أداة إدارة الأقراص واعرض القائمة لتحديد القرص المثبت عليه نظام التشغيل:
 
-                                                                                                                                                         ---
+```cmd
+diskpart
+list disk
+select disk 0
+list partition
+```
 
-                                                                                                                                                         ### الخطوة 2: تحديد بارتيشن الـ EFI وتعيين حرف له
+ملاحظة: اختر رقم القرص الصحيح (عادة ما يكون Disk 0).
 
-                                                                                                                                                         1. ابحث عن بارتيشن الإقلاع المخفي، ويكون بنظام ملفات **FAT32** وبحجم يتراوح عادة بين **100MB إلى 500MB**.
+---
 
-                                                                                                                                                         2. حدد البارتيشن المطلوب:
-                                                                                                                                                            ```cmd
-                                                                                                                                                               select partition X
-                                                                                                                                                                  ```
-                                                                                                                                                                     *(استبدل `X` برقم بارتيشن الـ FAT32 الخاص بالنظام لديك)*
+#### الخطوة 2: تحديد بارتيشن الـ EFI وتعيين حرف محرك أقراص
 
-                                                                                                                                                                     3. قم بتعيين حرف محرك أقراص غير مستخدم للبارتيشن (مثل `V:`):
-                                                                                                                                                                        ```cmd
-                                                                                                                                                                           assign letter=V:
-                                                                                                                                                                              ```
+ابحث في قائمة التقسيمات (Partitions) عن البارتيشن المخفي الخاص بالإقلاع، والذي يتميز بالخصائص التالية:
+- نظام الملفات: FAT32
+- الحجم: بين 100MB إلى 500MB
 
-                                                                                                                                                                              4. اخرج من أداة Diskpart:
-                                                                                                                                                                                 ```cmd
-                                                                                                                                                                                    exit
-                                                                                                                                                                                       ```
+نفذ الأوامر التالية لإعطائه حرفاً موقتاً (مثلاً V:):
 
-                                                                                                                                                                                       ---
+```cmd
+select partition X
+assign letter=V:
+exit
+```
 
-                                                                                                                                                                                       ### الخطوة 3: إعادة بناء ملفات الإقلاع (BCD)
+تنبيه: استبدل X برقم بارتيشن الـ FAT32 الظاهر لديك.
 
-                                                                                                                                                                                       1. انتقل إلى مجلد الإقلاع داخل البارتيشن المحدد:
-                                                                                                                                                                                          ```cmd
-                                                                                                                                                                                             cd /d V:\EFI\Microsoft\Boot\
-                                                                                                                                                                                                ```
+---
 
-                                                                                                                                                                                                2. قم بتحديث سجل الإقلاع:
-                                                                                                                                                                                                   ```cmd
-                                                                                                                                                                                                      bootrec /fixboot
-                                                                                                                                                                                                         ```
+#### الخطوة 3: إعادة بناء ملفات الإقلاع (BCD)
 
-                                                                                                                                                                                                         3. **في حال ظهور خطأ Access is Denied:**
-                                                                                                                                                                                                            قم بإعادة تهيئة بارتيشن الـ EFI المحدد فقط (`V:`):
-                                                                                                                                                                                                               ```cmd
-                                                                                                                                                                                                                  format V: /FS:FAT32
-                                                                                                                                                                                                                     ```
+انقل مسار العمل إلى مجلد الإقلاع واكتب ملفات الإقلاع الجديدة:
 
-                                                                                                                                                                                                                     4. أعد إنشاء ونشر ملفات النظام بالإشارة إلى مجلد الويندوز الرئيسي (`C:\Windows`):
-                                                                                                                                                                                                                        ```cmd
-                                                                                                                                                                                                                           bcdboot C:\Windows /l en-us /s V: /f ALL
-                                                                                                                                                                                                                              ```
-                                                                                                                                                                                                                                 *النتيجة المتوقعة:* ظهور رسالة `Boot files successfully created`.
+```cmd
+cd /d V:\EFI\Microsoft\Boot\
+bootrec /fixboot
+```
 
-                                                                                                                                                                                                                                 ---
+##### في حال ظهور خطأ (Access is denied):
+قم بإعادة تهيئة بارتيشن الـ EFI الخاص بالإقلاع فقط (تأكد من اختيار الحرف V: المعين سابقاً):
 
-                                                                                                                                                                                                                                 ### الخطوة 4: الخروج وإعادة التشغيل
+```cmd
+format V: /FS:FAT32
+```
 
-                                                                                                                                                                                                                                 1. اخرج من موجه الأوامر:
-                                                                                                                                                                                                                                    ```cmd
-                                                                                                                                                                                                                                       exit
-                                                                                                                                                                                                                                          ```
+ثم أعد بناء ملفات النظام بالإشارة إلى مجلد الويندوز الرئيسي:
 
-                                                                                                                                                                                                                                          2. اضغط على خيار **Continue to Windows** لإعادة التشغيل والإقلاع المباشر إلى النظام.
+```cmd
+bcdboot C:\Windows /l en-us /s V: /f ALL
+```
+
+علامة النجاح: ستظهر لك الرسالة التالية: Boot files successfully created.
+
+---
+
+#### الخطوة 4: الخروج وإعادة التشغيل
+
+اخرج من موجه الأوامر وأعد تشغيل الجهاز:
+
+```cmd
+exit
+```
+
+اضغط على Continue to Windows للإقلاع المباشر لنظام التشغيل.
+
+---
+
+## License & Notes
+- Designed specifically for UEFI/GPT systems.
+- Created for documentation and reference during bootloader recovery without data loss.
